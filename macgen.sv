@@ -5,5 +5,31 @@
  we have read.
  */
  
-module macgen(input clk, [7:0]key, [255:0]data,
-            output [7:0] MAC);
+module macgen(input clk, [255:0]key, [255:0]data, input enable,
+            output [255:0] MAC);
+
+//var [7:0] temp_mac;
+//var [7:0] temp_data;
+
+//assign MAC = temp_mac;
+
+assign MAC = enable ? key ^ data : 0;
+
+
+/*always_comb
+	begin
+	
+	if(enable)
+		begin
+		//temp_data = data[7:0];
+		for(int i = 0; i < 32; i++)
+			begin
+			temp_data += data[8*i+:8];
+			end
+		temp_mac = key ^ data;
+		end
+	else
+		temp_data = 0;	
+	end*/
+
+endmodule
