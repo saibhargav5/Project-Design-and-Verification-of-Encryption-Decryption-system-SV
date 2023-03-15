@@ -15,7 +15,7 @@ forever #5 clock = ~clock;
 end
 
 initial begin
-$monitor($time,"key=%b data=%b MAC=%b e_data=%b e_MAC=%b",key,data,MAC,e_data,e_MAC);
+//$monitor($time,"key=%b data=%b MAC=%b e_data=%b e_MAC=%b",key,data,MAC,e_data,e_MAC);
 
 key = 8'b00000000; 
 data = 8'b00000000; 
@@ -91,16 +91,17 @@ endmodule*/
 // Code your testbench here
 // or browse Examples
 
-module top();
-parameter N = 8;
+module top;
+parameter N = 256;
   reg clock;
   reg [N-1:0] key;
   reg [N-1:0] IN;
   reg sel;
   wire [N-1:0] OUT;
   wire valid_key;
+  //wire [N-1:0] temp;
 
-MTE TP(clock, key, IN, sel, OUT, valid_key);
+MTE #(.N(N)) TP (clock, key, IN, sel, OUT, valid_key);
 
 initial begin
 clock=1'b0;
@@ -111,14 +112,15 @@ initial begin
 
 //@(negedge clock);
   sel = 1'b1;
-  key = 8'h0;
-  IN = 8'h1;
+  key = 'h0;
+  IN = 'h1;
   //e_data1 = {32{8'hfe}};
 
-  @(negedge clock);
+  while(OUT[0] === 'x)
+	  @(negedge clock);
   sel = 1'b0;
-  key = 8'h0;
-  IN = 8'he;
+  key = 256'h0;
+  IN = OUT;
   //e_data1 = {32{8'hfe}};
 
   @(negedge clock);
