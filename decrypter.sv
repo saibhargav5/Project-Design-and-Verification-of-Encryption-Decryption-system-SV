@@ -9,7 +9,7 @@ module decryption #(parameter N=8)(clock,key,e_data,data);
  input [N-1:0] e_data;
  output reg [N-1:0] data;
   
-  reg [N-1:0] out1,out2,out3,out4,out51,out5;
+  reg [N-1:0] out1,out2,out3, out4,out51,out5;
 
 typedef struct packed {
   logic [N-1:0] e_data; //input
@@ -24,12 +24,13 @@ typedef struct packed {
 stage1 S1;
 stage2 S2,S3,S4,S5;
   
-  
-  rotateleft X2(out1,e_data);
-  reverse n4(out2,S1.data); 
-  NOT n3(out3,S2.data);
-  rotateright n5(out4,S3.data);
-  XOR x1(out5,S5.key,S4.data);
+  //needed to rename the modules because they were defined with the same names as the encrypter, so I added _d for decrypter
+  //needed to add parameterization to the code
+  rotateleft_d #(.N(N))  X2(out1,e_data);
+  reverse_d #(.N(N)) n4(out2,S1.data); 
+  NOT_d #(.N(N)) n3(out3,S2.data);
+  rotateright_d #(.N(N)) n5(out4,S3.data);
+  XOR_d #(.N(N)) x1(out5,S5.key,S4.data);
   
   
   assign data = S5.data;
@@ -52,24 +53,24 @@ always @(posedge clock)
   end
   
 endmodule
-module XOR #(parameter N=8)(output [N-1:0]out,input [N-1:0]key,data);
+module XOR_d #(parameter N=8)(output [N-1:0]out,input [N-1:0]key,data);
   
   assign out = (key ^ data);
   initial $monitor("out=%d key=%d data=%d",out,key,data);
 endmodule
 
 
-module rotateleft #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
+module rotateleft_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
   assign out = {data[4:0],data[N-1:5]};
   initial $monitor("out=%d data=%d",out,data);
 endmodule
 
-module NOT #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
+module NOT_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
  assign out = ~data;
  // initial $monitor("out=%d data=%d",out,data);
 endmodule
 
-module reverse #(parameter N=8) (output reg [N-1:0]out, input [N-1:0]data);
+module reverse_d #(parameter N=8) (output reg [N-1:0]out, input [N-1:0]data);
   
   always @(data)
     begin
@@ -79,9 +80,8 @@ module reverse #(parameter N=8) (output reg [N-1:0]out, input [N-1:0]data);
   //assign out4 = {data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]};
 endmodule
 
-module rotateright #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
+module rotateright_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
   assign out = {data[N-6:0],data[N-1:N-5]};
   initial $monitor("out=%d data=%d",out,data);
 endmodule
-
 
