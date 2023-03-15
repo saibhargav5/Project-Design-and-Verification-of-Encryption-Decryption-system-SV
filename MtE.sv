@@ -5,39 +5,43 @@
  */
 
  module MTE(clock,key,IN,sel,OUT,valid_key);
-  
+  parameter N = 8;
   input clock;
-  input [7:0]key;
-  input [7:0]IN;
+  input [N - 1:0]key;
+  input [N - 1:0]IN;
   input sel;
   output reg valid_key;
-  output reg [7:0]OUT;
+  output reg [N - 1:0]OUT;
   
-  wire [7:0]R1_out;
-  reg  [15:0]EnReg;
-  reg [15:0] DeReg;
-  reg [15:0] OutEn;
-  reg [15:0] OutDe;
-  reg [7:0]EMAC;
-  reg [7:0]DMAC;
+  //wire [7:0]R1_out;
+  reg  [2 * N - 1:0]EnReg;
+  reg [2 * N - 1:0] DeReg;
+  reg [2 * N - 1:0] OutEn;
+  reg [2 * N - 1:0] OutDe;
+  reg [N - 1:0]EMAC;
+  reg [N - 1:0]DMAC;
+  //didn't have EQ and out1 defined, so it wasn't working
+  reg EQ;
+  reg [N - 1 : 0] out1;
 
   assign EnReg = {IN,EMAC};
   assign DeReg = {IN,EMAC};
 
-  macgen M1(clock, key, IN[7:0], 1'b1, EMAC);
-  encryption EN1(clock,key,DeReg[7:0],OutEn[7:0]); 
-  encryption EN2(clock,key,DeReg[15:8],OutEn[15:8]); 
+  //needed parameterizing to make it work
+  macgen #(.N(N)) M1(clock, key, IN[N - 1:0], 1'b1, EMAC);
+  encryption #(.N(N)) EN1(clock,key,DeReg[N - 1:0],OutEn[N - 1:0]); 
+  encryption #(.N(N)) EN2(clock,key,DeReg[2 * N - 1: N],OutEn[2 * N - 1:N]); 
  
-  decryption DE1(clock,key,IN[7:0],OutDe[7:0]); //MAC
-  decryption DE2(clock,key,IN[7:0],OutDe[15:8]); //cipher text
+  decryption #(.N(N)) DE1(clock,key,IN[N - 1:0],OutDe[N - 1:0]); //MAC
+  decryption #(.N(N)) DE2(clock,key,IN[N - 1:0],OutDe[2 * N - 1:N]); //cipher text
 
-  macgen M2(clock, key, OutDe[15:8], 1'b1, DMAC);
-  mac_compare C1(clock, OutDe[7:0], DMAC, EQ);
+  macgen #(.N(N)) M2(clock, key, OutDe[2 * N - 1:N], 1'b1, DMAC);
+  mac_compare #(.N(N)) C1(clock, OutDe[N - 1:0], DMAC, EQ);
   
  // mac_compare C2(clock, OutDe[255:0], DMAC, EQ);
-  Muxnto1 DM(out1, '0, OutDe[15:8], EQ);
+  Muxnto1 #(.N(N)) DM(out1, '0, OutDe[2 * N - 1:N], EQ);
 
-  Muxnto1 FM(OUT, out1, OutEn[15:8], sel);
+  Muxnto1 #(.N(N)) FM(OUT, out1, OutEn[2 * N - 1: N], sel);
   //encryption e1(.clock(clock),.key(key),.data(m_data),.e_data(R1_out));
   //decryption e2(.clock(clock),.key(key),.e_data(R1_out),.data(enc_data));
   //decryption e2(clock,key,R1_out,enc_data);
@@ -85,19 +89,19 @@ endmodule
   reg [511:0] data1;
   reg [N-1:0] out1;
 
-  macgen M1(clk, key, IN[255:0], 1'b1, EMAC);
+  macgen #(.N(N)) M1(clk, key, IN[255:0], 1'b1, EMAC);
 // EnReg Array 
-  encryption EN1(clock,key,EnReg[255:0],OutEn[255:0]);
-  encryption EN2(clock,key,EnReg[511:256],OutEn[511:256]);
+  encryption #(.N(N)) EN1(clock,key,EnReg[255:0],OutEn[255:0]);
+  encryption #(.N(N)) EN2(clock,key,EnReg[511:256],OutEn[511:256]);
 // OutEn Array
-  decryption DE1(clock,key,IN[255:0],OutDe[255:0]);
-  decryption DE2(clock,key,IN[511:256],OutDe[511:256]);
+  decryption #(.N(N)) DE1(clock,key,IN[255:0],OutDe[255:0]);
+  decryption #(.N(N)) DE2(clock,key,IN[511:256],OutDe[511:256]);
 // OutDe Array
-  macgen M1(clk, key, IN[511:256], enable, DMAC);
-  mac_compare C1(clock, OutDe[255:0], DMAC, EQ);
-  Muxnto1 #(256)DM(out1, 256'b'0, OutDe[511:256], EQ);
+  macgen #(.N(N)) M1(clk, key, IN[511:256], enable, DMAC);
+  mac_compare #(.N(N)) C1(clock, OutDe[255:0], DMAC, EQ);
+  Muxnto1 #(.N(N)) #(256)DM(out1, 256'b'0, OutDe[511:256], EQ);
 
-  Muxnto1 #(512)FM(OUT, out1, OutEn, encrypt);
+  Muxnto1 #(.N(N)) FM(OUT, out1, OutEn, encrypt);
 
   assign valid_key = EQ ? 1 : 0;
 
