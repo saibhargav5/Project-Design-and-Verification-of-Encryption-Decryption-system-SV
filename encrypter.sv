@@ -35,12 +35,12 @@ typedef struct packed {
 stage1 S1;
 stage2 S2,S3,S4,S5;
   
-  
-  XOR x1(out1,key,data);
-  rotateleft X2(out2,S1.e_data);
-  NOT n3(out3,S2.e_data);
-  reverse n4(out4,S3.e_data);
-  rotateright n5(out5,S4.e_data);
+  //needed parameterizing to make it work 
+  XOR #(.N(N)) x1(out1,key,data);
+  rotateleft #(.N(N)) X2(out2,S1.e_data);
+  NOT #(.N(N)) n3(out3,S2.e_data);
+  reverse #(.N(N)) n4(out4,S3.e_data);
+  rotateright #(.N(N)) n5(out5,S4.e_data);
   
   
   assign e_data = S5.e_data;
@@ -91,4 +91,3 @@ endmodule
 module rotateright #(parameter N=8) (output [N-1:0]out5, input [N-1:0]data);
   assign out5 = {data[N-6:0],data[N-1:N-5]};
 endmodule 
-
