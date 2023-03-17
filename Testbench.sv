@@ -150,6 +150,53 @@ initial begin
 
 
   repeat(20) @(negedge clock);
+	
+$finish;
+end
+
+/*  initial begin
+    $dumpfile("enc.vcd");
+    $dumpvars;
+  end*/
+  
+endmodule
+/*
+// TESTBENCH FOR BHUVAN MTE DESIGN
+module top;
+parameter N = 8;
+  reg clock;
+  reg [N - 1:0] key;
+  reg [2 * N - 1:0] IN;
+  reg sel;
+  wire [2 * N - 1:0] OUT;
+  wire valid_key;
+  //wire [N-1:0] temp;
+
+MTE #(.N(N)) TP (clock, key, IN, sel, OUT, valid_key);
+
+initial begin
+clock=1'b0;
+forever #5 clock = ~clock;
+end
+
+initial begin
+$monitor("sel = %b, key = %h, IN = %h, OUT = %h", sel,key,IN,OUT);
+//@(negedge clock);
+  sel = 1'b1;
+  //sel = 1'b0;
+  key = 8'hce;
+  IN = 8'hac;
+  //IN = 16'he62b;
+  //e_data1 = {32{8'hfe}};
+
+  while(OUT[0] === 'x)
+	  @(negedge clock);
+  sel = 1'b0;   // decrypting the cipher text for the above encryption (key= 8'hce and data= 8'hac)
+  key = 8'hce;
+  IN = 16'he62b; // cipher text for data= 8'hac with key= 8'hce    // here the expected out(decrytion output = 8'hac)
+  //e_data1 = {32{8'hfe}};
+
+  repeat(20) @(negedge clock);
 $finish;
 end
 
