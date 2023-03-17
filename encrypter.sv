@@ -56,6 +56,7 @@ always @(posedge clock)
    S3.e_data <= out3;
    S4.e_data <= out4;
    S5.e_data <= out5;
+   //$display("Output: %b", e_data);
   end
   
 endmodule
@@ -65,12 +66,13 @@ module XOR #(parameter N=8)(output [N-1:0]out1,input [N-1:0]key,data);
   
   assign out1 = key ^ data;
   initial $monitor("out1=%d key=%d data=%d",out1,key,data);
+	//$display("input: %b\tout1: %b\n", data, out1);
 endmodule
 
 
 module rotateleft #(parameter N=8) (output [N-1:0]out2, input [N-1:0]data);
-  assign out2 = {data[4:0],data[N-1:5]};
-  initial $monitor("out2=%d data=%d",out2,data);
+  assign out2 = {data[N/2-1:0],data[N-1:N/2]};
+  //initial $monitor("out2=%d data=%d",out2,data);
 endmodule
 
 module NOT #(parameter N=8) (output [N-1:0]out3, input [N-1:0]data);
@@ -89,5 +91,6 @@ module reverse #(parameter N=8) (output reg [N-1:0]out4, input [N-1:0]data);
 endmodule
   
 module rotateright #(parameter N=8) (output [N-1:0]out5, input [N-1:0]data);
-  assign out5 = {data[N-6:0],data[N-1:N-5]};
+  assign out5 = {data[N/2-1:0],data[N-1:N/2]};
+  //initial $monitor("out5=%d data=%d", out5, data);
 endmodule 
