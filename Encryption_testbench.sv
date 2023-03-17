@@ -28,10 +28,22 @@ initial begin
 
 
 @(negedge clock);
-  key = 8'b10101010;
-  data = 8'b01010101;
+  key = 'h13;
+  data = 'hFF;
  
-  @(negedge clock);
+  repeat(4)@(negedge clock);
+  $display("e_data: ",e_data);
+  repeat(15)
+	begin
+	@(negedge clock);
+	$display("e_data: ",e_data);
+	end
+@(negedge clock);
+  $display("e_data: ",e_data);
+
+
+
+  
 
 
   repeat(20) @(negedge clock);
