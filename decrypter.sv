@@ -56,13 +56,13 @@ endmodule
 module XOR_d #(parameter N=8)(output [N-1:0]out,input [N-1:0]key,data);
   
   assign out = (key ^ data);
-  initial $monitor("out=%d key=%d data=%d",out,key,data);
+  //initial $monitor("out=%d key=%d data=%d",out,key,data);
 endmodule
 
 
 module rotateleft_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
-  assign out = {data[4:0],data[N-1:5]};
-  initial $monitor("out=%d data=%d",out,data);
+  assign out = {data[N/2-1:0],data[N-1:N/2]};
+  //initial $monitor("out=%d data=%d",out,data);
 endmodule
 
 module NOT_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
@@ -81,7 +81,7 @@ module reverse_d #(parameter N=8) (output reg [N-1:0]out, input [N-1:0]data);
 endmodule
 
 module rotateright_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
-  assign out = {data[N-6:0],data[N-1:N-5]};
-  initial $monitor("out=%d data=%d",out,data);
+  assign out = {data[N/2-1:0],data[N-1:N/2]};
+  //initial $monitor("out=%d data=%d",out,data);
 endmodule
 
