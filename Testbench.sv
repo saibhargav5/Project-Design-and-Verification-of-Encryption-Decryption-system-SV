@@ -1,107 +1,17 @@
-/*module top;
-
-reg clock;
-reg [7:0]key;
-reg [7:0]data;
-reg [7:0]MAC;
-wire [7:0]e_data;
-wire [7:0]e_MAC;
-
-encryption DUT(clock,key,data,MAC,e_data,e_MAC);
-
-initial begin
-clock=1'b0;
-forever #5 clock = ~clock;
-end
-
-initial begin
-//$monitor($time,"key=%b data=%b MAC=%b e_data=%b e_MAC=%b",key,data,MAC,e_data,e_MAC);
-
-key = 8'b00000000; 
-data = 8'b00000000; 
-MAC = 8'b00000000;
-@(negedge clock);
- 
-key = 8'b10101010; 
-data = 8'b11110000; 
-MAC = 8'b10000001;
-@(negedge clock);
-
-key = 8'b10011001; 
-data = 8'b00000000; 
-MAC = 8'b00000001;
-@(negedge clock);
-
-repeat(2) @(negedge clock);
-$finish;
-end
-
-endmodule*/
-
-// Code your testbench here
-// or browse Examples
-// Code your testbench here
-// or browse Examples
-
-/*module top;
-parameter N= 8;
-  
-  bit clock;
-  reg [N-1:0]key;
-  reg [N-1:0]e_data;
-  wire [N-1:0]data;
-
-  decryption DUT(clock,key,e_data,data);
-
-initial begin
-clock=1'b0;
-forever #5 clock = ~clock;
-end
-
-initial begin
-
-//@(negedge clock);
-  key = 8'd0;
-  e_data = 8'd1;
-
-
-  @(negedge clock);
-  key = 8'hF;
-  e_data = 8'd2;
-
-
-@(negedge clock);
-  key = 8'b10101010;
-  e_data = 8'b01010101;
- 
-  @(negedge clock);
-
-
-  repeat(20) @(negedge clock);
-$finish;
-end
-
-  initial begin
-    $dumpfile("enc.vcd");
-    $dumpvars;
-  end
-  
-endmodule*/
-
 // Code your testbench here
 // or browse Examples
 
 module top;
-parameter N = 256;
+parameter N = 8;
   reg clock;
   reg [N-1:0] key;
   reg [N-1:0] IN;
   reg sel;
   wire [N-1:0] OUT;
   wire valid_key;
-  //wire [N-1:0] temp;
+  reg [N-1:0] temp;
 
-MTE #(.N(N)) TP (clock, key, IN, sel, OUT, valid_key);
+MTE /*#(.N(N))*/ TP (clock, key, IN, sel, OUT, valid_key);
 
 initial begin
 clock=1'b0;
@@ -111,19 +21,27 @@ end
 initial begin
 
 //@(negedge clock);
-  sel = 1'b1;
-  key = 'h0;
-  IN = 'h1;
+  $display("Test 1"); //check that it encrypts
+  sel = 1'b1; //encrypt
+  key = 'h13; 
+  IN = 8'b11111111;
   //e_data1 = {32{8'hfe}};
 
-  while(OUT[0] === 'x)
-	  @(negedge clock);
+
+  repeat(10) @(negedge clock); //wait some time for valid data (need to actually find out exact number of clock cycles required)
+  $display("output: %d", OUT); //output data to determine if correct
+
+  $display("test 2"); //check that it decrypts
   sel = 1'b0;
-  key = 256'h0;
-  IN = OUT;
+  //key = 'h13;
+  //IN = OUT;
   //e_data1 = {32{8'hfe}};
+  //repeat (20) @(negedge clock);
+  #0 //update the clock so we get decrypted data instead of encrypted (shouldn't do this in final design)
+  $display("output: %d", OUT); //output decrypted data (later set this to check if the output is the same as the first input for automation);
 
-  @(negedge clock);
+  // ********havent actually looked at this part yet, just been trying numbers with the first half
+  $display("Test 3");
   sel = 1'b1;
   key = 8'hF;
   IN = 8'h2;
@@ -148,53 +66,6 @@ initial begin
   //e_data1 = {32{8'h96}};
 
 
-
-  repeat(20) @(negedge clock);
-	
-$finish;
-end
-
-/*  initial begin
-    $dumpfile("enc.vcd");
-    $dumpvars;
-  end*/
-  
-endmodule
-/*
-// TESTBENCH FOR BHUVAN MTE DESIGN
-module top;
-parameter N = 8;
-  reg clock;
-  reg [N - 1:0] key;
-  reg [2 * N - 1:0] IN;
-  reg sel;
-  wire [2 * N - 1:0] OUT;
-  wire valid_key;
-  //wire [N-1:0] temp;
-
-MTE #(.N(N)) TP (clock, key, IN, sel, OUT, valid_key);
-
-initial begin
-clock=1'b0;
-forever #5 clock = ~clock;
-end
-
-initial begin
-$monitor("sel = %b, key = %h, IN = %h, OUT = %h", sel,key,IN,OUT);
-//@(negedge clock);
-  sel = 1'b1;
-  //sel = 1'b0;
-  key = 8'hce;
-  IN = 8'hac;
-  //IN = 16'he62b;
-  //e_data1 = {32{8'hfe}};
-
-  while(OUT[0] === 'x)
-	  @(negedge clock);
-  sel = 1'b0;   // decrypting the cipher text for the above encryption (key= 8'hce and data= 8'hac)
-  key = 8'hce;
-  IN = 16'he62b; // cipher text for data= 8'hac with key= 8'hce    // here the expected out(decrytion output = 8'hac)
-  //e_data1 = {32{8'hfe}};
 
   repeat(20) @(negedge clock);
 $finish;
