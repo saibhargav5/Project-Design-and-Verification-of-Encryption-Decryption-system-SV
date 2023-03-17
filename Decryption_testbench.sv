@@ -22,15 +22,20 @@ initial begin
 
   @(negedge clock);
   key = 8'hF;
-  e_data = 8'd2;
+  e_data = 79;
 
 
 @(negedge clock);
-  key = 8'b10101010;
-  e_data = 8'b01010101;
+  key = 8'b10100000;
+  e_data = 80;
  
-  @(negedge clock);
-
+  repeat(4)@(negedge clock);
+  $display("data: ",data);
+  repeat(15)
+	begin
+	@(negedge clock);
+	$display("data: ",data);
+	end
 
   repeat(20) @(negedge clock);
 $finish;
