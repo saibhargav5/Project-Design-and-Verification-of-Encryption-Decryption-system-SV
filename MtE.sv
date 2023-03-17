@@ -3,7 +3,58 @@
  pass them the required information, and then will output take their outputs
  and output it to the user
  */
+// NEW 
+module MTE(clock,key,IN,sel,OUT,valid_key);
+  
+  input clock;
+  input [7:0]key;
+  input [7:0]IN;
+  input sel;
+  output reg valid_key;
+  output reg [7:0]OUT;
+  
+  wire [7:0]R1_out;
+  reg [15:0]EnReg;
+  reg [15:0] DeReg;
+  reg [15:0] OutEn;
+  reg [15:0] OutDe;
+  reg [7:0]EMAC;
+  reg [7:0]DMAC;
+  reg EQ;
+  reg and_out;
+  reg [15:0] out1;
+  reg [15:0] OutEn1;
+ assign OutEn1 = {OutEn[15:8],OutEn[7:0]}; // Encrpted output(cipher text)
+  reg [7:0] OUT1;
+  assign EnReg = {IN,EMAC}; // store input and the MAC generated for input in a single reg
+  //assign DeReg = {IN,EMAC};
+  assign and_out = (~sel & EQ); // and gate from
 
+  macgen M1(clock, key, IN[7:0], 1'b1, EMAC); // Generate MAC for Encryption 
+  
+  //always @(posedge clock)
+   // begin
+  //fork
+  //  begin
+  encryption EN1(clock,key,EnReg[7:0],OutEn[7:0]); // Encrypt MAC part of the input
+  encryption EN2(clock,key,EnReg[15:8],OutEn[15:8]); // Encrypt data part of the input
+  //  end
+   // begin
+  decryption DE1(clock,key,OutEn[7:0],OutDe[7:0]); // Decrypting the MAC part of the cypher text 
+  decryption DE2(clock,key,OutEn[15:8],OutDe[15:8]); // Decrypting the data part of the cipher text
+    //end
+  //join
+  //  end
+  
+  macgen M2(clock, key, OutDe[15:8], 1'b1, DMAC); // generate MAC for comparison during decryption
+  mac_compare C1(clock, OutEn[7:0], DMAC, EQ);  // compare MAC generated during decrption and the MAC that is decrypted from the cipher text
+  assign OUT = OutDe[15:8]; // plain text output
+    //Muxnto1 DM
+endmodule
+
+
+/*
+// OLD
  module MTE(clock,key,IN,sel,OUT,valid_key);
   parameter N = 8;
   input clock;
@@ -70,7 +121,7 @@ input S;
 
 assign Y = S ? V1 : V0;
 endmodule
-
+*/
 /*module MTE #(parameter N=512)(clock, key, IN, encrypt, OUT, valid_key);
 
   input clock;
