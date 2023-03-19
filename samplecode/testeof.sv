@@ -9,7 +9,7 @@ initial
 	//loop until you get to the last character
 	for(int i = 0; i < $clog2(256); i++)
 		//if character is eof
-		if(data[i+:7] == 3)
+		if(data[8*i+:7] == 3)
 			begin
 			$display("Found eof");
 			$finish;
