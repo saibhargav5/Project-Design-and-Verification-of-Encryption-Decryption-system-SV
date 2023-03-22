@@ -1,79 +1,98 @@
-// Code your testbench here
-// or browse Examples
-
 module top;
-parameter N = 8;
-  reg clock;
-  reg [N-1:0] key;
-  reg [N-1:0] IN;
-  reg sel;
-  wire [N-1:0] OUT;
-  wire valid_key;
-  reg [N-1:0] temp;
 
-MTE /*#(.N(N))*/ TP (clock, key, IN, sel, OUT, valid_key);
+parameter N = 256;
+
+  logic clock;
+  logic [255:0]key;
+  logic [255:0]IN;
+  logic sel;
+  logic valid_key;
+  logic [255:0]OUT;
+
+string data;
+string sub;
+
+  //pseudo input data
+
+int fd;
+int read;
+
+int diff;
+
+int temp;
+
+MTE DUT(clock,key,IN,sel,OUT,valid_key);
 
 initial begin
-clock=1'b0;
-forever #5 clock = ~clock;
+clock = 1'b0;
+forever #10 clock = ~clock;
 end
 
-initial begin
+initial
+	begin
+		key = 256'b1;
+		sel = 1'b0;
+	fd = $fopen("./text.txt", "r");
+	if(!fd) 
+		begin
+		$display("File not opened");	
+		$finish;
+		end
+	while(!$feof(fd))
+		begin
+		//this will keep the newline character at the end of the string, but we need to keep
+		//it, otherwise when we decrypt we will be missing the newlines
+		read = $fgets(data, fd);
+		//$display("binary: %b",data.substr(0, data.len()));
+		//$display("substring > 32: %s",data.substr(32, data.len()-1));
+		if(read != 0)
+			begin
+			//this is in our case where we want to read 32 characters
+			diff = 0;
+			//$display("bytes read: %d", read);
+			while(diff < read)
+				begin
+           //check if there are 32 bytes left in the string
+				if(read - diff < 32)
+					begin
+					temp = read-diff;
+            //this loops from where we last printed of the string to the end of the 32 byte chunk, filling in 0s
+					for(int i = temp; i < 32; i++)
+						begin
+						data.putc(i + diff, "0");
+						//data[i] = "0";
+						end
+            //get the substring from where we left off to the end of the 32 byte chunk (cause the loop made it reach 32 bytes)
+					sub = data.substr(diff, data.len()-1);
+					$display("substring < 32: %s",sub);
+					end
+				else
+						begin
+              //get the substring from where we left off to the end of the 32 byte chunk
+						sub = data.substr(diff, diff+31);
+						$display("substring > 32: %s", sub);
 
-//@(negedge clock);
-  $display("Test 1"); //check that it encrypts
-  sel = 1'b1; //encrypt
-  key = 'h13; 
-  IN = 8'b11111111;
-  //e_data1 = {32{8'hfe}};
+						end
+          
+          //loop to convert each character into bits and then shift into IN
+				for(int i = 0; i < 32; i++)
+					IN = (IN << 8) | sub.getc(i);
+				$display("hex data: %h\n\n", IN);
+          //move to next 32 byte chunk
+				diff += 32;
+				@(negedge clock);
+				end
+				repeat(10) @(negedge clock);
+			end
+		else
+			begin
+			$display("couldn't read");
+			$finish;
+			end
+
+		end
 
 
-  repeat(10) @(negedge clock); //wait some time for valid data (need to actually find out exact number of clock cycles required)
-  $display("output: %d", OUT); //output data to determine if correct
-
-  $display("test 2"); //check that it decrypts
-  sel = 1'b0;
-  //key = 'h13;
-  //IN = OUT;
-  //e_data1 = {32{8'hfe}};
-  //repeat (20) @(negedge clock);
-  #0 //update the clock so we get decrypted data instead of encrypted (shouldn't do this in final design)
-  $display("output: %d", OUT); //output decrypted data (later set this to check if the output is the same as the first input for automation);
-
-  // ********havent actually looked at this part yet, just been trying numbers with the first half
-  $display("Test 3");
-  sel = 1'b1;
-  key = 8'hF;
-  IN = 8'h2;
-  //e_data1 = {32{8'h96}};
-
-  @(negedge clock);
-  sel = 1'b0;
-  key = 8'hF;
-  IN = 8'h6;
-  //e_data1 = {32{8'h96}};
-
-@(negedge clock);
-  sel = 1'b1;
-  key = 8'ha;
-  IN = 8'h5;
-  //e_data1 = {32{8'h14}};
-
-  @(negedge clock);
-  sel = 1'b0;
-  key = 8'ha;
-  IN = 8'h4;
-  //e_data1 = {32{8'h96}};
-
-
-
-  repeat(20) @(negedge clock);
-$finish;
-end
-
-/*  initial begin
-    $dumpfile("enc.vcd");
-    $dumpvars;
-  end*/
+	end
   
 endmodule
