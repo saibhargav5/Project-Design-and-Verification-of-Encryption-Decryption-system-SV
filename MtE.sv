@@ -14,17 +14,12 @@ module MTE(clock,key,IN,sel,OUT,valid_key);
   reg [511:0] OutDe;
   reg [255:0]EMAC;
   reg [255:0]DMAC;
-  reg EQ;
   reg and_out;
   reg [511:0] out1;
   reg [511:0] OutEn1;
   assign OutEn1 = {OutEn[511:256],OutEn[255:0]}; // Encrpted output(cipher text)
-  reg [255:0] OUT1;
   assign EnReg = {IN,EMAC}; // to store input and the MAC generated for input in a single reg
-  //assign OUT = OutEn[255:0];
 
-  //**********we need one more mux that uses this to determine if we have the correct MAC and determine if we should send correct data or 0s (only should happen when decrypting)
-  assign and_out = (~sel & EQ); 
 
   macgen M1(clock, key, IN[255:0], 1'b1, EMAC); // Generate MAC for Encryption 
   
@@ -37,13 +32,15 @@ module MTE(clock,key,IN,sel,OUT,valid_key);
 
   macgen #(.N(N)) M2(clock, key, OutDe[511:256], 1'b1, DMAC); // generate MAC for comparison during decryption
   mac_compare #(.N(N)) C1(clock, OutDe[255:0], DMAC, valid_key);  // compare MAC generated during decrption and the MAC that is decrypted from the cipher text
-  //assign OUT = OutDe[15:8]; // plain text output
+  
+  //mux that uses this to determine if we have the correct MAC and determine if we should send correct data or 0s (only should happen when decrypting)
   Muxnto1 #(.N(N)) FM(mux_out,'0,OutDe[511:256],valid_key);
+
   Muxnto1 #(.N(N)) DM (OUT, OutDe[2 * N-1 : N], OutEn[2 * N - 1 : N], sel); //determine if we are outputting encrypted data or decrypted data
 
 
 
-  //**********need to write eof searcher function that loops through the IN per byte and compares if the value is 0x3
+  // eof searcher function that loops through the IN per byte and compares if the value is 0x3
 	 //genvar i;
 	 //generate
 	 initial begin
