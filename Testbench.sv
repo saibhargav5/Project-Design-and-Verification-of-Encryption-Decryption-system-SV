@@ -1,194 +1,114 @@
+// Code your testbench here
+// or browse Examples
+
 module top;
-
 parameter N = 256;
-parameter NRANDOM  = 500;
+  reg clock;
+  reg [N-1:0] key;
+  reg [N-1:0] IN;
+  reg sel;
+  wire [N-1:0] OUT;
+  wire valid_key;
+  reg [N-1:0] temp;
+  string string_input;
+  string temp_output;
+  int verbose;
+  int test_cases;
+  int j;
 
-  logic clock;
-  logic [255:0]key;
-  logic [255:0]IN;
-  logic sel;
-  logic valid_key;
-  logic [255:0]OUT;
+MTE #(.N(N)) TP (clock, key, IN, sel, OUT, valid_key);
 
-string data;
-string sub;
+class rand_string;
+	rand byte input_char[];
 
-  //pseudo input data
+	constraint str_len {input_char.size() == 257;}
+	constraint no_eof { foreach(input_char[i])
+				input_char[i] inside {[32:126]};
+			}
+	//constraint end_string { input_char[256] == 0;}
 
-int fd;
-int read;
+	//this function generates the string from the line of characters from the input_char
+	function string gen_string();
+		string input_string;
+		//go through every byte and add to string.
+		foreach(input_char[i])
+			input_string = {input_string, string'(input_char[i])};
+		//input_string.putc(256, 0);
+		//input_string.putc(0, 100);
+		//input_string.putc(1, 0);
+		//$display("Here is the string: %s", input_string);
+		return input_string;
+	endfunction
 
-int diff;
+endclass
 
-int temp;
-int total_count=0, pass_count=0, fail_count = 0;
-MTE DUT(clock,key,IN,sel,OUT,valid_key);
+rand_string string_class;
 
-typedef struct packed {
-//logic [255:0] key;
-logic [255:0] IN;
-} TestCase;
-
-TestCase Q[$];		// queue of testcases as deep as pipeline
-TestCase  TC;
-
-typedef struct packed {
-	logic [255:0] exp_out;
-}Exp_Testcase;
-
-Exp_Testcase Q_Exp[$];
-Exp_Testcase TC_Exp;
 
 initial begin
-clock = 1'b0;
-forever #10 clock = ~clock;
+clock=1'b0;
+forever #5 clock = ~clock;
 end
 
-task checkresults(input TestCase TC);
+initial 
+  begin
+  test_cases = 10;
+  if($test$plusargs("VERBOSE"))
+	verbose = 1; 
+  if($test$plusargs("EXTENSIVE"))
+	test_cases = 100000;
+  string_class = new;
+  string_class.randomize();
+  string_input = string_class.gen_string();
+  //$display("rand_string value: %h", string_class.input_char);
 
-logic [255:0] exp_out;
-exp_out = DUT.OUT;
-  $display($time,"expected output:%d",DUT.OUT);
-  total_count ++ ;
-  if(exp_out != TC.IN) begin
-	fail_count++;
-  $display($time,"FAILED exp_out:%h IN:%d key:%h",exp_out,IN,key);
-  end
-  else begin
-	pass_count++;
-  $display($time,"PASSED exp_out:%h IN:%d key:%h",exp_out,IN,key);
-  end
-  $display("total count = %d pass count = %d fail count = %d",total_count,pass_count,fail_count);
-endtask
-	
-initial begin
-	repeat(11) @(negedge clock);
-	while(Q.size() > 0)
-        begin
-	  TC = Q.pop_back();
-	  checkresults(TC);
-	  $display($time,"POP from queue:%p",TC);
-	//repeat(10) @(negedge clock);
-	  @(negedge clock);
-        end
-	//$finish;
-end
-
-initial
+//@(negedge clock);
+  for(j = 0; j < test_cases; j++)
 	begin
-    			@(negedge clock);
-        `ifdef USEFILE
-		key = 256'b1;
-		sel = 1'b0;
-	fd = $fopen("./text.txt", "r");
-	if(!fd) 
+	  string_class.randomize();
+	  string_input = string_class.gen_string();
+	  if(verbose)
 		begin
-		$display("File not opened");	
-		$finish;
+	  	$display("******Test Encrypt******"); //check that it encrypts
+	  	$display("Input: %s", string_input);
 		end
-	while(!$feof(fd))
-		begin
-		//this will keep the newline character at the end of the string, but we need to keep
-		//it, otherwise when we decrypt we will be missing the newlines
-		read = $fgets(data, fd);
-		//$display("binary: %b",data.substr(0, data.len()));
-		//$display("substring > 32: %s",data.substr(32, data.len()-1));
-		if(read != 0)
-			begin
-			//this is in our case where we want to read 32 characters
-			diff = 0;
-			//$display("bytes read: %d", read);
-			while(diff < read)
-				begin
-           //check if there are 32 bytes left in the string
-				if(read - diff < 32)
-					begin
-					temp = read-diff;
-            //this loops from where we last printed of the string to the end of the 32 byte chunk, filling in 0s
-					for(int i = temp; i < 32; i++)
-						begin
-						data.putc(i + diff, "0");
-						//data[i] = "0";
-						end
-            //get the substring from where we left off to the end of the 32 byte chunk (cause the loop made it reach 32 bytes)
-					sub = data.substr(diff, data.len()-1);
-					$display("substring < 32: %s",sub);
-					end
-				else
-						begin
-              //get the substring from where we left off to the end of the 32 byte chunk
-						sub = data.substr(diff, diff+31);
-						$display("substring > 32: %s", sub);
-
-						end
-          
-          //loop to convert each character into bits and then shift into IN
-				for(int i = 0; i < 32; i++)
-					IN = (IN << 8) | sub.getc(i);
-				//$display($time,"hex data: %h\n\n", IN);
-				$display($time,"decimal data: %d\n\n", IN);
-          //move to next 32 byte chunk
-				diff += 32;
-
-				TC.IN = IN;
-				//TC.key = key;
-				Q.push_front(TC);
-			       $display($time,"Q:%p",Q);	
-				@(negedge clock);
-				end
-				//@(negedge clock);
-				 repeat(20) @(negedge clock);
-			end
-		else
-			begin
-			$display("couldn't read");
-			$finish;
-			end
+	  sel = 1'b1; //encrypt
+	  key = 'h13; 
+	  for(int i = 0; i < 32; i++)
+		IN = (IN << 8) | string_input.getc(i);
+	  //e_data1 = {32{8'hfe}};
+	  if(verbose)
+	  	$display("input is: %h", IN);
+	
+	  repeat(10) @(negedge clock); //wait some time for valid data (need to actually find out exact number of clock cycles required)
+	  if(verbose)
+		begin  
+		temp_output = "";
+	  	for(int i = 0; i < 32; i++)
+		temp_output = {temp_output, string'(OUT[8*i+:7])};
+	  	$display("output: %h\nString output: %s", OUT, temp_output); //output data to determine if correct
+	
+	  	$display("******Test Decrypt******"); //check that it decrypts
 		end
-	`endif
-    
-        `ifdef DIRECT
-    $monitor($time,"key:%d IN:%d sel:%d OUT:%d",key,IN,sel,OUT);
-   
-   Applystimulus('1, 1 << 256,'0);
-   Applystimulus('0, 1 << 256,'0);
-   Applystimulus(1 << 255, 1 << 256,'0);
-   Applystimulus('0, 1 >> 255,'0);
-   Applystimulus({64{4'h7}},{64{4'h9}},'0);
-
- repeat(20) @(negedge clock);
-  $finish;
-  `endif
-  
-  repeat (NRANDOM)
-		begin
-		IN = $urandom_range(1,256);
-		key = $urandom_range(1,256);
-		sel = 1'b0;
-                TC.IN = IN;
-                Q.push_front(TC);
-                $display($time,"PUSH in a queue:%p",Q);
-                $display($time,"PUSH in a TC:%p",TC);
-                $display($time,"key:%d IN:%d sel:%d OUT:%d",key,IN,sel,OUT);
-		@(negedge clock);
-		end
-             repeat(20) @(negedge clock);
-  $finish;
+	  sel = 1'b0;
+	  //key = 'h13;
+	  //IN = OUT;
+	  //e_data1 = {32{8'hfe}};
+	  //repeat (20) @(negedge clock);
+	  #0 //update the clock so we get decrypted data instead of encrypted (shouldn't do this in final design)
+	  if(OUT !== IN)
+		$display("Decrypted wrong.");
+	  if(verbose)
+		$display("output: %h\n\n\n", OUT); //output decrypted data (later set this to check if the output is the same as the first input for automation);
 	end
- 
-        `ifdef DIRECT
-task Applystimulus(input [255:0] in,input [255:0] in_key, input s);
-	IN = in;
-	key = in_key;
-	sel = s;
-    TC.IN = IN;
-    Q.push_front(TC);
-    $display($time,"PUSH in a queue:%p",Q);
-    $display($time,"PUSH in a TC:%p",TC);
-	@(negedge clock);
-endtask
-
-  `endif
 
 
+  @(negedge clock)
+
+  $display("Finished Running!");
+  $display("Number of tests run: %d\n", j);
+  $finish;
+  
+  end
+  
 endmodule
