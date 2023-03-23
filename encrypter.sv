@@ -2,12 +2,12 @@
  it will do some operation on the data to encrypt it (using the key somehow)
  and then will output that encrypted 32 bytes.
  */
-/*   ENCRYPT 
+/*   ENCRYPT Operations
 1) xor with key etc    
-2) left shift(5)     
+2) Rotate left     
 3) not               
-4) reverse             => reverse (eg: [abcdefgh] -> [hgfedcba]) 
-5) right shift(5)      
+4) reverse         
+5) Rotate right      
 */
 
 // Code your design here
