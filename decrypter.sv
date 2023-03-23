@@ -3,7 +3,7 @@
  the encryption formula) and then will output that unencrypted 32 bytes.
  */
 
-module decryption #(parameter N=256)(clock,key,e_data,data);
+module decryption #(parameter N=8)(clock,key,e_data,data);
  input clock;
  input [N-1:0] key;
  input [N-1:0] e_data;
@@ -22,7 +22,7 @@ typedef struct packed {
 }stage2;
 
 stage1 S1;
-stage2 S2,S3,S4,S5,S6,S7,S8,S9,S10;
+stage2 S2,S3,S4,S5;
   
   //needed to rename the modules because they were defined with the same names as the encrypter, so I added _d for decrypter
   //needed to add parameterization to the code
@@ -30,7 +30,7 @@ stage2 S2,S3,S4,S5,S6,S7,S8,S9,S10;
   reverse_d #(.N(N)) n4(out2,S1.data); 
   NOT_d #(.N(N)) n3(out3,S2.data);
   rotateright_d #(.N(N)) n5(out4,S3.data);
-  XOR_d #(.N(N)) x1(out5,S10.key,S4.data);
+  XOR_d #(.N(N)) x1(out5,S5.key,S4.data);
   
   
   assign data = S5.data;
@@ -43,11 +43,6 @@ always @(posedge clock)
    S3.key <= S2.key;
    S4.key <= S3.key;
    S5.key <= S4.key;
-   S6.key <= S5.key;
-   S7.key<= S6.key;
-   S8.key <= S7.key;
-   S9.key <= S8.key;
-   S10.key <= S9.key;
    S1.e_data <= e_data;
    S1.data <= out1;
     
@@ -58,19 +53,19 @@ always @(posedge clock)
   end
   
 endmodule
-module XOR_d #(parameter N=256)(output [N-1:0]out,input [N-1:0]key,data);
+module XOR_d #(parameter N=8)(output [N-1:0]out,input [N-1:0]key,data);
   
   assign out = (key ^ data);
   //initial $monitor("out=%d key=%d data=%d",out,key,data);
 endmodule
 
 
-module rotateleft_d #(parameter N=256) (output [N-1:0]out, input [N-1:0]data);
-  assign out = {data[250:0],data[255:251]};
+module rotateleft_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
+  assign out = {data[N/2-1:0],data[N-1:N/2]};
   //initial $monitor("out=%d data=%d",out,data);
 endmodule
 
-module NOT_d #(parameter N=256) (output [N-1:0]out, input [N-1:0]data);
+module NOT_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
  assign out = ~data;
  // initial $monitor("out=%d data=%d",out,data);
 endmodule
@@ -85,10 +80,8 @@ module reverse_d #(parameter N=8) (output reg [N-1:0]out, input [N-1:0]data);
   //assign out4 = {data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]};
 endmodule
 
-module rotateright_d #(parameter N=256) (output [N-1:0]out, input [N-1:0]data);
-  assign out = {data[4:0],data[255:5]};
+module rotateright_d #(parameter N=8) (output [N-1:0]out, input [N-1:0]data);
+  assign out = {data[N/2-1:0],data[N-1:N/2]};
   //initial $monitor("out=%d data=%d",out,data);
 endmodule
-
-
 
