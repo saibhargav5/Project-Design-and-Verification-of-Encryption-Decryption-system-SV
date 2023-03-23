@@ -11,7 +11,7 @@
 */
 
 // Code your design here
-module encryption #(parameter N=256)(clock,key,data,e_data);
+module encryption #(parameter N=8)(clock,key,data,e_data);
   input clock;
   input [N-1:0] key;
   input [N-1:0] data;
@@ -62,15 +62,16 @@ always @(posedge clock)
 endmodule
 
 
-module XOR #(parameter N=256)(output [N-1:0]out1,input [N-1:0]key,data);
+module XOR #(parameter N=8)(output [N-1:0]out1,input [N-1:0]key,data);
   
   assign out1 = key ^ data;
+  //initial $monitor("out1=%d key=%d data=%d",out1,key,data);
 	//$display("input: %b\tout1: %b\n", data, out1);
 endmodule
 
 
 module rotateleft #(parameter N=8) (output [N-1:0]out2, input [N-1:0]data);
-  assign out2 = {data[250:0],data[255:251]};
+  assign out2 = {data[N/2-1:0],data[N-1:N/2]};
   //initial $monitor("out2=%d data=%d",out2,data);
 endmodule
 
@@ -79,7 +80,7 @@ module NOT #(parameter N=8) (output [N-1:0]out3, input [N-1:0]data);
  // initial $monitor("out3=%d data=%d",out3,data);
 endmodule
 
-module reverse #(parameter N=256) (output reg [N-1:0]out4, input [N-1:0]data);
+module reverse #(parameter N=8) (output reg [N-1:0]out4, input [N-1:0]data);
   
   always @(data)
     begin
@@ -89,7 +90,7 @@ module reverse #(parameter N=256) (output reg [N-1:0]out4, input [N-1:0]data);
   //assign out4 = {data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]};
 endmodule
   
-module rotateright #(parameter N=256) (output [N-1:0]out5, input [N-1:0]data);
-  assign out5 = {data[4:0],data[255:5]};
+module rotateright #(parameter N=8) (output [N-1:0]out5, input [N-1:0]data);
+  assign out5 = {data[N/2-1:0],data[N-1:N/2]};
   //initial $monitor("out5=%d data=%d", out5, data);
 endmodule 
