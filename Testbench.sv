@@ -20,6 +20,7 @@ MTE #(.N(N)) TP (clock, key, IN, sel, OUT, valid_key);
 
 class rand_string;
 	rand byte input_char[];
+	rand bit [255:0] password;
 
 	constraint str_len {input_char.size() == 257;}
 	constraint no_eof { foreach(input_char[i])
@@ -71,9 +72,10 @@ initial
 		begin
 	  	$display("******Test Encrypt******"); //check that it encrypts
 	  	$display("Input: %s", string_input);
+		$display("Key: %d", string_class.password);
 		end
 	  sel = 1'b1; //encrypt
-	  key = 'h13; 
+	  key = string_class.password; 
 	  for(int i = 0; i < 32; i++)
 		IN = (IN << 8) | string_input.getc(i);
 	  //e_data1 = {32{8'hfe}};
