@@ -1,7 +1,9 @@
+
 module top;
-parameter N= 8;
+  parameter N= 8;
+  parameter NRANDOM = 1000;
   
-reg clock;
+  reg clock;
   reg [N-1:0]key;
   reg [N-1:0]data;
   reg [N-1:0]MAC;
@@ -16,36 +18,16 @@ forever #5 clock = ~clock;
 end
 
 initial begin
-
+  $monitor("key:%h data:%h e_data:%h",key,data,e_data);
 //@(negedge clock);
-  key = 8'd0;
-  data = 8'd1;
-
-
-  @(negedge clock);
-  key = 8'hF;
-  data = 8'd2;
-
-
-@(negedge clock);
-  key = 'h13;
-  data = 'hFF;
- 
-  repeat(4)@(negedge clock);
-  $display("e_data: ",e_data);
-  repeat(15)
-	begin
-	@(negedge clock);
-	$display("e_data: ",e_data);
-	end
-@(negedge clock);
-  $display("e_data: ",e_data);
-
-
-
   
-
-
+  repeat(NRANDOM)
+    begin
+    key = $random;
+    data = $random;
+      @(negedge clock);
+    end
+  
   repeat(20) @(negedge clock);
 $finish;
 end
@@ -56,3 +38,4 @@ end
   end
   
 endmodule
+
