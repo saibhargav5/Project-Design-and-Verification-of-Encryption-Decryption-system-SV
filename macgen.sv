@@ -5,7 +5,7 @@
  we have read.
  */
  
-module macgen #(parameter N = 8)(input clk, [N-1:0]key, [N-1:0]data, input enable,
+module macgen #(parameter N = 256)(input clk, [N-1:0]key, [N-1:0]data, input enable,
             output [N-1:0] MAC);
 
 //var [7:0] temp_mac;
